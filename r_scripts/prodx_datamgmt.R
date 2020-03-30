@@ -116,7 +116,7 @@ bin_vil <- as_tibble(bin_vil[, -dim(bin_vil)[2]])
 # combine all production data
 liv_prodx <- bind_cols(liv_outputs_total, liv_inputs, bin_vil)
 crop_prodx <- bind_cols(crop_outputs_total, crop_inputs, bin_vil)
-write_csv(liv_prodx, 'data/liv_prodx.csv')
-write_csv(crop_prodx, 'data/crop_prodx.csv')
+# write_csv(liv_prodx, 'data/liv_prodx.csv')
+# write_csv(crop_prodx, 'data/crop_prodx.csv')
 
 

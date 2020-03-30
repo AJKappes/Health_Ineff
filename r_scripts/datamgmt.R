@@ -36,5 +36,5 @@ for (key in m_y) {
 
 # combine and write data ----------------------------------------------------
 data <- bind_rows(m_ylist)
-write_csv(data, path = 'data/joindatav2.csv')
+# write_csv(data, path = 'data/joindatav2.csv')
 
