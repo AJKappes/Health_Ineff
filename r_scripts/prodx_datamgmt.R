@@ -4,7 +4,7 @@ remove(list = objects())
 setwd('~/research/africa/Health_Ineff/')
 library(tidyverse)
 
-data <- read_csv('data/joindatav2.csv')
+data <- read_csv('data/joindatav3.csv')
 
 # helper function
 output_fun <- function(df) {
@@ -43,7 +43,8 @@ output_fun <- function(df) {
 
 # Livestock
 liv_outputs <- data %>%
-  select(matches('Consumed|Eaten|Sold|Milk|Eggs'))
+  select(matches('Consumed|Eaten|Sold|Milk|Eggs')) %>% 
+  select(-matches('Value'))
 
 # Crops
 crop_outputs <- data %>%
@@ -63,7 +64,7 @@ crop_outputs_total <- tibble(crop_out_total = output_fun(crop_outputs)[['total']
 
 ### Inputs ###
 
-Land <- data['TotalAcres']
+Land <- data[c('TotalAcres', 'UnsharedLand')]
 Labor <- data[, 'TotalHHMembers'] - rowSums(data[, grep('Under3', names(data))])
 
 Capital_gen <- data %>%
@@ -93,9 +94,13 @@ bin_Edu <- tibble(no_edu = ifelse(max_Edu == 1, 1, 0),
                   prim_edu = ifelse(max_Edu == 2, 1, 0),
                   sec_edu = ifelse(max_Edu == 3, 1, 0))
 
+# animal loss
+dloss <- data %>% 
+  select(contains('Dead'))
+
 liv_inputs <- output_fun(bind_cols(Land, Labor, Capital_gen,
                                    TotalLivIncome, TotalLivExp, TotalLivTreatExp,
-                                   bin_Edu))[['df']]
+                                   bin_Edu, dloss))[['df']]
 
 crop_inputs <- output_fun(bind_cols(Land, Labor, Capital_gen,
                                     Capital_crop, TotalLivIncome, bin_Edu))[['df']]
@@ -114,9 +119,11 @@ colnames(bin_vil) <- vil_var
 bin_vil <- as_tibble(bin_vil[, -dim(bin_vil)[2]])
 
 # combine all production data
-liv_prodx <- bind_cols(liv_outputs_total, liv_inputs, bin_vil)
-crop_prodx <- bind_cols(crop_outputs_total, crop_inputs, bin_vil)
-# write_csv(liv_prodx, 'data/liv_prodx.csv')
-# write_csv(crop_prodx, 'data/crop_prodx.csv')
+liv_prodx <- bind_cols(data[, c('IntDate.x', 'HousehldID')], liv_outputs_total,
+                       liv_inputs, bin_vil)
+crop_prodx <- bind_cols(data[, c('IntDate.x', 'HousehldID')], crop_outputs_total,
+                        crop_inputs, bin_vil)
+# write_csv(liv_prodx, 'data/liv_prodx_wloss4.csv')
+# write_csv(crop_prodx, 'data/crop_prodx3.csv')
 
 

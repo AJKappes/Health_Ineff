@@ -1,4 +1,4 @@
-# SFA - Health proportion Analysis
+# Stochastic Frontier Analysis Modeling
 
 remove(list = objects())
 setwd('~/research/africa/Health_Ineff/')
@@ -7,8 +7,8 @@ library(ggplot2)
 library(cowplot)
 library(latex2exp)
 
-liv_prodx <- read_csv('data/liv_prodx.csv')
-crop_prodx <- read_csv('data/crop_prodx.csv')
+liv_prodx <- read_csv('data/liv_prodx_wloss4.csv')
+crop_prodx <- read_csv('data/crop_prodx2.csv')
 
 ### Data mgmt ---------------------------------------------------------------
 
@@ -21,6 +21,8 @@ sub_idx <- function(data, extreme, q) {
   return(data[-idx, ])
   
 }
+
+liv_loss_vars <- names(liv_prodx)[grep('Dead', names(liv_prodx))]
 
 liv_ext_vars <- c('OffFarmNetIncome', 'TotalAcres', 'UsablePhones',
                   'liv_out_total', 'TotalLivExp', 'TotalLivTreatExp',
@@ -39,8 +41,14 @@ crop_reduc_vars <- names(crop_prodx)[grep('crop_out|Acres|HHMem|Usable|
 
 # remove zero production
 liv_noidx <- which(liv_prodx['liv_out_total'] == 0)
-liv_prodx <- sub_idx(liv_prodx[-liv_noidx, ], liv_ext_vars, 0.9)[liv_reduc_vars]
 
+# livestock and crop production
+liv_ext_prodx <- sub_idx(liv_prodx[-liv_noidx, ], liv_ext_vars, 0.9)
+liv_loss <- liv_ext_prodx[liv_loss_vars]
+liv_comgraz <- liv_ext_prodx['UnsharedLand']
+liv_edu <- liv_ext_prodx %>% select(contains('edu'))
+liv_dates_hhID <- liv_ext_prodx[, c('IntDate.x', 'HousehldID')]
+liv_prodx <- liv_ext_prodx[liv_reduc_vars]
 crop_prodx <- sub_idx(crop_prodx, crop_ext_vars, 0.9)[crop_reduc_vars]
 
 
@@ -95,8 +103,8 @@ sfa_ll <- function(theta, data, indicate){
     
     # skewed negative errors => switch sign(e) '-'
     ll <- -n*log(sig) + n/2*log(2/pi) -
-      1/2*sum((e/sig)^2) +
-      sum(log(pnorm(-e*lam/sig)))
+      1/2*sum((-e/sig)^2) +
+      sum(log(pnorm(e*lam/sig)))
     
   } else if (indicate == 'random') {
     
@@ -225,8 +233,6 @@ for (j in 1:length(models)) {
   
 }
 
-
-
 # plotting
 # e_plot <- ggplot(ineff_data) +
 #   geom_density(aes(e), fill = 'gray', colour = 'gray', alpha = .35) +
@@ -246,6 +252,11 @@ for (j in 1:length(models)) {
 #   
 # liv_plots <- plot_grid(e_plot, u_e_plot)
 
+# write ineff and loss
+liv_data_out <- cbind(sfa_models[['random']]$ineff, sfa_models[['random']]$prop_ineff,
+                      liv_dates_hhID, liv_prodx, liv_loss, liv_comgraz, liv_edu)
+names(liv_data_out)[1:2] <- c('ineff', 'p_ineff')
+# write_csv(liv_data_out, 'data/liv_ineff_loss5.csv')
 
 
-### testing ---------------------------------------------------------------
+### Testing ---------------------------------------------------------------

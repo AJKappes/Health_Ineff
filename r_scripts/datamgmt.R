@@ -24,17 +24,17 @@ for (key in m_y) {
                dlist$hh_demogs[dlist$hh_demogs['IntDate'] == key, ], 
                dlist$liv_inc[dlist$liv_inc['IntDate'] == key, ],
                dlist$liv_inv[dlist$liv_inv['IntDate'] == key, ],
-               dlist$liv_exp[dlist$liv_exp['IntDate'] == key, ],
+               dlist$liv_exp2[dlist$liv_exp2['IntDate'] == key, ],
                dlist$milkcrop_prod[dlist$milkcrop_prod['IntDate'] == key, ],
                dlist$prod_capital[dlist$prod_capital['IntDate'] == key, ]) %>% 
     lapply(function(d) distinct(d, HousehldID, .keep_all = TRUE))
   
+  # reduce dfs in list to one df with variable join
   m_ylist[[key]] <- data %>% reduce(inner_join, by = 'HousehldID')
-  
   
 }
 
 # combine and write data ----------------------------------------------------
 data <- bind_rows(m_ylist)
-# write_csv(data, path = 'data/joindatav2.csv')
+write_csv(data, path = 'data/joindatav3.csv')
 
